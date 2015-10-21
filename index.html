@@ -52,6 +52,16 @@
 		NEWLIFE: 6,
 	}
 	var gameState = gameStatus.START;
+	var blueGem = new Image();
+	blueGem.src = "images/blueGem.png"
+	var redGem = new Image();
+	blueGem.src = "images/redGem.png"
+	var greeGem = new Image();
+	blueGem.src = "images/greenGem.png"
+	var whiteGem = new Image();
+	blueGem.src = "images/whiteGem.png"
+	
+	var powerUps = [];
 	
 	document.addEventListener("keydown", keyDownHandler, false);
 	document.addEventListener("keyup", keyUpHandler, false);
@@ -150,6 +160,28 @@
 			}
 		}
 	}
+	function createPowerUps(xStart, yStart){
+		console.log("power up created")
+		var chance = Math.random()*100;
+		console.log(chance)
+		if(chance == 0){
+			powerUps[powerUps.lenght+1] = {image: whiteGem, score: 100, oneUp: 1, x: xStart, y: yStart}
+		}
+		else if(chance <= 0 && chance > 10){
+			powerUps[powerUps.lenght+1] = {image: redGem, score: 100, oneUp: 0, x: xStart, y: yStart}
+		}
+		else if(chance <= 10 && chance > 15){
+			powerUps[powerUps.lenght+1] = {image: blueGem, score: 100, oneUp: 0, x: xStart, y: yStart}
+		}
+		else if(chance <= 15 && chance > 25){
+			powerUps[powerUps.lenght+1] = {image: greenGem, score: 100, oneUp: 0, x: xStart, y: yStart}
+		}
+	}
+	function drawPowerUps(){
+		for(var i = powerUps.lenght; i > 0; i++){
+			ctx.drawImage(powerUps[i].image, powerUps.x, powerUps.y);
+		}
+	}
 	function drawScore(){
 		ctx.font = "16px Arial";
 		ctx.fillStyle = "#0095DD";
@@ -222,6 +254,7 @@
 						b.status = 0;
 						score += 10;
 						bricksCreated--;
+						createPowerUps();
 						if(bricksCreated <= 0) {
 							gameState = gameStatus.VICTORY;
 							level++;
