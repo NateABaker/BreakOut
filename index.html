@@ -41,15 +41,17 @@
 	var brickOffsetLeft = 30;
 	var score = 0;
 	var level = 1;
+	var lives = 3;
 	var bricksCreated = 0;
-	var gameStates = {
+	var gameStatus = {
 		START: 1,
 		GAMEOVER: 2,
 		PAUSED: 3,
 		PLAY: 4,
 		VICTORY: 5,
+		NEWLIFE: 6,
 	}
-	var gameState = gameStates.START;
+	var gameState = gameStatus.START;
 	
 	document.addEventListener("keydown", keyDownHandler, false);
 	document.addEventListener("keyup", keyUpHandler, false);
@@ -59,29 +61,35 @@
 	
 	function gameStart (){
 		console.log("Game start: "+gameState);
-		bricks = [];
-		for(c = 0; c < brickColumnCount; c++){
-			bricks[c] = [];
+		if(gameState != gameStatus.NEWLIFE){	
+			console.log("Balls");
+			bricks = [];		
+			for(c = 0; c < brickColumnCount; c++){
+				bricks[c] = [];
 			
-			for(r = 0; r < brickRowCount; r++){
-				var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
-				var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
-				bricks[c][r] = {x: brickX, y: brickY, color: getRandomColor(), status: 1};
+				for(r = 0; r < brickRowCount; r++){
+					var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+					var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+					bricks[c][r] = {x: brickX, y: brickY, color: getRandomColor(), status: 1};
+				}
 			}
+			bricksCreated = brickRowCount*brickColumnCount;
 		}
-		bricksCreated = brickRowCount*brickColumnCount-1;
+		
 		ballX = canvas.width/2;
 		ballY = canvas.height/2;
 		paddleX = (canvas.width - paddleWidth)/2;
 		ballDirX = 2;
 		ballDirY = 2;
-		if(gameState == gameStates.GAMEOVER){
+		if(gameState == gameStatus.GAMEOVER){
 			console.log("Game over restart");
 			level = 0;
 			score = 0;
-			gameState = gameStates.START;
+			lives = 3;
+			gameState = gameStatus.START;
 		}
 	}
+	
 	
 	function  keyDownHandler(e){
 		if(e.keyCode == 39){
@@ -102,17 +110,15 @@
 	}
 	function keyPressHandler(e){
 		if(e.keyCode == 13){
-			if(gameState == gameStates.START || gameState == gameStates.PAUSED){
-				gameState = gameStates.PLAY
+			if(gameState == gameStatus.START || gameState == gameStatus.PAUSED ||
+			gameState == gameStatus.VICTORY || gameState == gameStatus.NEWLIFE){
+				gameState = gameStatus.PLAY
 			}
-			else if(gameState == gameStates.VICTORY){
-				gameState = gameStates.PLAY
-			}
-			else if(gameState == gameStates.GAMEOVER){
+			else if(gameState == gameStatus.GAMEOVER){
 				gameStart();
 			}
 			else{
-				gameState = gameStates.PAUSED;
+				gameState = gameStatus.PAUSED;
 			}
 		}
 	}
@@ -148,9 +154,10 @@
 		ctx.font = "16px Arial";
 		ctx.fillStyle = "#0095DD";
 		ctx.fillText("Score: "+score, 8, 20);
+		ctx.fillText("Lives: "+lives, canvas.width-64, 20);
 	}
 	function drawTitles(){
-		if(gameState == gameStates.START){
+		if(gameState == gameStatus.START){
 			ctx.font = "46px Arial";
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(title, canvas.width/2- ctx.measureText(title).width/2, canvas.height/2);
@@ -158,7 +165,7 @@
 			ctx.fillText(byLine, canvas.width/2- ctx.measureText(byLine).width/2, canvas.height/2+18);
 			ctx.fillText(pressEnter, canvas.width/2- ctx.measureText(pressEnter).width/2, canvas.height/2+34);
 		}
-		else if(gameState == gameStates.GAMEOVER){
+		else if(gameState == gameStatus.GAMEOVER){
 			ctx.font = "46px Arial";
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(gameOver, canvas.width/2- ctx.measureText(gameOver).width/2, canvas.height/2);
@@ -166,7 +173,7 @@
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(pressEnter, canvas.width/2- ctx.measureText(pressEnter).width/2, canvas.height/2+16);
 		}
-		else if(gameState == gameStates.PAUSED){
+		else if(gameState == gameStatus.PAUSED){
 			ctx.font = "46px Arial";
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(pause, canvas.width/2- ctx.measureText(pause).width/2, canvas.height/2);
@@ -174,8 +181,17 @@
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(pressEnter, canvas.width/2- ctx.measureText(pressEnter).width/2, canvas.height/2+16);
 		}
-		else if(gameState == gameStates.VICTORY){
+		else if(gameState == gameStatus.VICTORY){
 			newLevel = "Level: "+level+"";
+			ctx.font = "46px Arial";
+			ctx.fillStyle = "#0095DD";
+			ctx.fillText(level, canvas.width/2- ctx.measureText(level).width/2, canvas.height/2);
+			ctx.font = "16px Arial";
+			ctx.fillStyle = "#0095DD";
+			ctx.fillText(pressEnter, canvas.width/2- ctx.measureText(pressEnter).width/2, canvas.height/2+16);
+		}
+		else if(gameState == gameStatus.NEWLIFE){
+			newLevel = "Level: "+level+" Lives: "+lives;
 			ctx.font = "46px Arial";
 			ctx.fillStyle = "#0095DD";
 			ctx.fillText(level, canvas.width/2- ctx.measureText(level).width/2, canvas.height/2);
@@ -206,8 +222,8 @@
 						b.status = 0;
 						score += 10;
 						bricksCreated--;
-						if(bricksCreated = 0) {
-							gameState = gameStates.VICTORY;
+						if(bricksCreated <= 0) {
+							gameState = gameStatus.VICTORY;
 							level++;
 							gameStart();
 						}
@@ -219,7 +235,7 @@
     }
 	function draw(){
 //Begin logic
-		if(gameState == gameStates.PLAY){
+		if(gameState == gameStatus.PLAY){
 			ballX += ballDirX;
 			ballY += ballDirY;
 //Ball movement
@@ -235,7 +251,14 @@
 					ballDirX = randomIntFromInterval(-4, 3);
 				}
 				else{
-					gameState = gameStates.GAMEOVER;
+					if(lives > 0){
+						gameState = gameStatus.NEWLIFE;
+						lives--;
+						gameStart();
+					}
+					else{
+						gameState = gameStatus.GAMEOVER;
+					}
 				}
 			}
 //Paddel movement
@@ -251,7 +274,7 @@
 //Begin render
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 //Draw Sprites
-		if(gameState == gameStates.PLAY){
+		if(gameState == gameStatus.PLAY){
 			drawBall();
 		}
 		drawPaddle();
